@@ -6,7 +6,7 @@ import uuid
 from api.db import log_model_calls
 from api.config import  ACTIVE_MODELS
 from api.providers import call_model, embed_text
-from api.cache import get_cached, set_cached
+from api.cache import get_ask_cached, set_ask_cached
 from api.judge import judge_best
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -37,7 +37,7 @@ async def run_consensus(prompt: str, use_cache: bool = True, strategy: str = "se
     request_id = uuid.uuid4()
 
     if use_cache:
-        cached = await get_cached(prompt, strategy)
+        cached = await get_ask_cached(prompt, strategy)
         if cached is not None:
             cached["cached"] = True
             return cached
@@ -77,6 +77,6 @@ async def run_consensus(prompt: str, use_cache: bool = True, strategy: str = "se
 
     await log_model_calls(request_id, prompt, results)
     if use_cache:
-        await set_cached(prompt, result, strategy)
+        await set_ask_cached(prompt, result, strategy)
     result["request_id"] = str(request_id)
     return result
