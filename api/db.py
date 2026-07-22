@@ -6,23 +6,27 @@ _pool: asyncpg.Pool | None=None
 
 async def init_db()-> None:
     global _pool
-    _pool = await asyncpg.create_pool(database, min_size=1, max_size=5)
-    async with _pool.acquire() as conn:
-        await conn.execute("""
-            CREATE TABLE IF NOT EXISTS model_calls (
-            id           BIGSERIAL PRIMARY KEY,
-            request_id   UUID        NOT NULL,   
-            model        TEXT        NOT NULL,
-            provider     TEXT        NOT NULL,
-            ok           BOOLEAN     NOT NULL,
-            latency_ms   INTEGER,
-            tokens       INTEGER,
-            agreement    REAL,                   
-            was_selected BOOLEAN     NOT NULL DEFAULT FALSE,
-            error        TEXT,
-            created_at   TIMESTAMPTZ NOT NULL DEFAULT now());""")
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_model_calls_model ON model_calls (model);")
-        await conn.execute("CREATE INDEX IF NOT EXISTS idx_model_calls_request ON model_calls (request_id);")
+    try:
+        _pool = await asyncpg.create_pool(database, min_size=1, max_size=5)
+        async with _pool.acquire() as conn:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS model_calls (
+                id           BIGSERIAL PRIMARY KEY,
+                request_id   UUID        NOT NULL,   
+                model        TEXT        NOT NULL,
+                provider     TEXT        NOT NULL,
+                ok           BOOLEAN     NOT NULL,
+                latency_ms   INTEGER,
+                tokens       INTEGER,
+                agreement    REAL,                   
+                was_selected BOOLEAN     NOT NULL DEFAULT FALSE,
+                error        TEXT,
+                created_at   TIMESTAMPTZ NOT NULL DEFAULT now());""")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_model_calls_model ON model_calls (model);")
+            await conn.execute("CREATE INDEX IF NOT EXISTS idx_model_calls_request ON model_calls (request_id);")
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        _pool = None
 
 async def close_db()->None:
     if _pool is not None:
