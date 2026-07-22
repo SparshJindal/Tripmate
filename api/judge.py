@@ -1,7 +1,7 @@
 import re
 import json 
 from api.config import ACTIVE_MODELS
-from providers import call_model
+from api.providers import call_model
 
 def pick_judge_model():
     for hint in ("70b","gemini"):
